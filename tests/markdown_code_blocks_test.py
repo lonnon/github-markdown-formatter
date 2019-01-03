@@ -1,9 +1,6 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-from markdown_code_blocks import CodeRenderer
-from markdown_code_blocks import highlight
-from markdown_code_blocks import main
+from markdown_code_blocks import CodeRenderer, highlight, main
 
 
 def test_simple_markdown():
@@ -61,4 +58,10 @@ def test_main(capsys, tmpdir):
     f.write('## ohai\n')
     main((f.strpath,))
     out, _ = capsys.readouterr()
-    assert out == '<!doctype html><html><body><h2>ohai</h2>\n</body></html>\n'
+    assert out.startswith('<!doctype html><html lang="en"><head><meta charset="utf-8">')
+    assert (
+        '<body><div class="container" style="margin-top: 20px; margin-bottom: 20px;">'
+        '<div class="Box Box--condensed"><div class="Box-body p-6">'
+        '<article class="markdown-body entry-content">'
+    ) in out
+    assert '<h2>ohai</h2>\n' in out
