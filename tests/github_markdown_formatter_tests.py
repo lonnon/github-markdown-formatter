@@ -1,6 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
-from markdown_code_blocks import CodeRenderer, highlight, main
+from github_markdown_formatter import CodeRenderer, highlight, main
 
 
 def test_simple_markdown():
