@@ -39,6 +39,20 @@ def test_highlight_plain_text():
     )
 
 
+def test_invalid_lang():
+    ret = highlight(
+        '```wombats\n'
+        'wombats is not a language, but it should be\n'
+        '```\n'
+    )
+    assert ret == (
+        '<div class="highlight"><pre>'
+        '<span></span>'
+        'wombats is not a language, but it should be\n'
+        '</pre></div>\n'
+    )
+
+
 def test_custom_renderer():
     class MyRenderer(CodeRenderer):
         def block_code(self, *args):
