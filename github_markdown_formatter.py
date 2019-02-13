@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 
 import argparse
-import io
 import os
 
 import mistune
@@ -27,22 +26,42 @@ def highlight(doc, Renderer=CodeRenderer):
     return mistune.Markdown(Renderer(escape=True, hard_wrap=False))(doc)
 
 
-def inline_styles(filenames):
-    path = os.path.dirname(os.path.realpath(__file__))
+def inline_styles(path):
     styles = []
-    for filename in filenames:
-        style_path = os.path.join(path, filename)
-        with io.open(style_path) as stylesheet:
-            styles.append(stylesheet.read())
+    with os.scandir(path) as iterator:
+        for entry in iterator:
+            if entry.is_file() and entry.name.endswith('.css'):
+                with open(entry.path, 'r', encoding='utf-8') as stylesheet:
+                    styles.append(stylesheet.read())
     return ''.join(styles)
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename', default='/dev/stdin')
+    try:
+        default_csspath = os.path.dirname(os.path.realpath(__file__))
+    except NameError:
+        default_csspath = os.path.dirname(os.path.realpath('.'))
+
+    parser = argparse.ArgumentParser(
+        description="Convert markdown to HTML with GitHub styling."
+    )
+    parser.add_argument(
+        'filename',
+        default='/dev/stdin',
+        help="Markdown file to convert",
+    )
+    parser.add_argument(
+        '-o', '--output',
+        help="Path to output file (default: stdout)",
+    )
+    parser.add_argument(
+        '-c', '--csspath',
+        default=default_csspath,
+        help="Path to CSS files (default: %(prog)s path",
+    )
     args = parser.parse_args(argv)
 
-    with io.open(args.filename) as f:
+    with open(args.filename, 'r', encoding='utf-8') as f:
         hl = highlight(f.read())
         html = (
             '<!doctype html>'
@@ -58,11 +77,16 @@ def main(argv=None):
             '{body_markup}'
             '</div></div></div></article></body></html>'
         )
-        print(html.format(
-            style_markup=inline_styles(['frameworks.css', 'github.css']),
+        output = html.format(
+            style_markup=inline_styles(args.csspath),
             body_markup=hl,
-        ).encode('utf-8'))
+        )
+        if args.output is None:
+            print(output)
+        else:
+            with open(args.output, 'w', encoding='utf-8') as o:
+                o.write(output)
 
 
 if __name__ == '__main__':
-    exit(main())
+    main()
